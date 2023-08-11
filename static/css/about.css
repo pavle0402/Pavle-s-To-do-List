@@ -1,0 +1,38 @@
+body, h1, p, ul, li {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: Arial, sans-serif;
+}
+
+h1{
+    text-align: center;
+    text-decoration: underline 3px;
+    margin-bottom: 10px;
+}
+
+p1{
+    font-weight: bold;
+    margin-bottom: 5px;
+
+}
+
+.about-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 70vh;
+}
+
+.about-content {
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    max-width: 1200px;
+    width: 100%;
+    color: #333;
+}
+

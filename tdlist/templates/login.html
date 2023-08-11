@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{%load static%} 
+
+{%block content%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+{% if not user.is_authenticated %}
+    <div class="login-container">
+        <form class="login-form" action="{% url 'login' %}" method="post">
+            {% csrf_token %}
+            <h2>Login</h2>
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" required>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+            <button type="submit">Login</button>
+        </form>
+</div>
+</body>
+{% else %}
+<h1 style="text-align: center;margin-top: 100px; color: white;">You are already logged in {{request.user.first_name}}. <a style="color: rgb(17, 85, 221);" href="{% url 'tasks_list' %}"><br>Create task.</a></h1>
+</html>
+{%endif%}
+{%endblock%}
