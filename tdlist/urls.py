@@ -12,5 +12,6 @@ urlpatterns = [
     path('tasks_list/create_task/', login_required(views.CreateTaskView.as_view()), name='create_task'),
     path('tasks_list/<int:pk>/delete/', login_required(views.DeleteTaskView.as_view()), name='delete_task'),
     path('pin_task/<int:pk>/', views.PinTaskView, name="pin_task"),
+    path('unpin_all_tasks/', views.UnpinAllTasksView, name="unpin_all_tasks"),
     # path('tasks_list/<int:pk>/task_completed/', views.TaskCompletionUpdateView.as_view(), name="task_completed")
 ]

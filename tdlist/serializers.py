@@ -10,7 +10,10 @@ class TaskSerializer(serializers.ModelSerializer):
 
 
         def validate_task_time(self, value):
-            if value and value < timezone.now().time():
+            current_time = timezone.now().time()
+            if value and value < current_time:
                 raise serializers.ValidationError("Task can't be in the past.")
+            if value.hour > 23 or (value.hour and value.minute > 59):
+                raise serializers.ValidationError("Invalid task time.")
             return value
 

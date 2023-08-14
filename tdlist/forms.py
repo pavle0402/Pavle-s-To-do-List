@@ -1,7 +1,10 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Task 
+from .models import Task, TaskCompletion
+from django.utils import timezone
+from django.core.exceptions import ValidationError
+from django.contrib import messages
 
 genders = (
     ('Male', 'Male'),
@@ -36,3 +39,9 @@ class CreateTaskForm(forms.ModelForm):
             'user': forms.TextInput(attrs={'class':'form-control','id':'user','value':'', 'type':'hidden'}),
             'task_due': forms.TimeInput(attrs={'class':'form-control', 'placeholder':'Vienna timezone. e.g. 12:00'})
         }
+
+
+class TaskCompletionForm(forms.ModelForm):
+    class Meta:
+        model = TaskCompletion
+        fields = ('task_completion',)

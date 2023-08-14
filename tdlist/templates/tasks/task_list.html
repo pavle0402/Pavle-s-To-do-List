@@ -30,6 +30,7 @@
                 </div>
             </form>        
         </div>
+
             <table id="task-list">
                 <thead>
                     <tr>
@@ -41,13 +42,18 @@
                     </tr>
                 </thead>
                 <tbody>
+                {% if tasks_pinned %}
+                    <button id="unpin-all-tasks" class="btn btn-danger">Unpin all tasks</button>
+                {%endif%}
                     {% for task in tasks %}
                     <tr>
-                        <td id="task-{{task.pk}}" class="pinned-icon">
+                        <td data-task-id="{{ task.pk }}" class="pinned-icon">
                             {% if task.pinned %}
-                                <span><i class="fa-solid fa-thumbtack"></i></span>
+                                <span><i class="fa-solid fa-thumbtack" ></i></span>
+                                <strong style="color: Red;">{{task.task}}</strong>
+                            {%else%}
+                                {{task.task}}
                             {% endif %}
-                            {{ task.task }}
                         </td>
                         <td>{{ task.task_due|date:"H:i" }}</td>
                         <td>{{ task.created_at }}</td>
@@ -55,16 +61,18 @@
                             <input type="checkbox" class="task-checkbox" data-task-pk="{{ task.pk }}" {% if task.complete %}checked{% endif %}>
                         </td>
                         <td>
-                            <div class="dropdown" onclick="toggleDropdown(this)">
+                            <div class="dropdown" id="dropdown-menu" onclick="toggleDropdown(this)">
                                 <i class="fas fa-ellipsis-v"></i>
                                 <div class="dropdown-content">
                                     <a class="dropdown-item"><button class="delete-button" data-task-id="{{task.pk}}">Delete</button></a>
-                                    {% if task.pinned %}
-                                    <button class="pin-button btn btn-primary" data-task-id="{{ task.pk }}">Unpin task</button>
-                                    {% else %}
-                                    <button class="pin-button btn btn-primary" data-task-id="{{ task.pk }}">Pin task</button>
-                                    {%endif%}
-
+                                    <button class="pin-button btn btn-primary" data-task-id="{{ task.pk }}" data-pinned="{{ task.pinned }}">
+                                        {% if task.pinned %}
+                                            Unpin task
+                                        {% else %}
+                                            Pin task
+                                        {% endif %}
+                                    </button>
+                                    
                                 </div>
                             </div>
                         </td>
@@ -84,16 +92,27 @@
         </div>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
 <script>
     function toggleDropdown(dropdown) {
         dropdown.classList.toggle("active");
     }
+
+        // Add event listener to close dropdown when clicking outside of it
+        document.addEventListener("click", function (event) {
+        var dropdown = document.getElementById("dropdown-menu");
+        var targetElement = event.target;
+
+        // Check if the clicked element is not part of the dropdown
+        if (dropdown.contains(targetElement)) {
+            return;
+        }
+
+        // Close the dropdown
+        dropdown.classList.remove("active");
+    });
 </script>
-
 <script>
-
-
-    
     // Toggle form visibility
     $('#toggle-form-btn').click(function() {
         $('#create-form-container').toggle();
@@ -139,8 +158,8 @@
 </script>
 
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
+
             document.addEventListener("DOMContentLoaded", function() {
             const modal = document.getElementById("deleteModal");
             const confirmDeleteBtn = document.getElementById("confirmDeleteBtn");
@@ -192,38 +211,102 @@
 </script>
 
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
+
+
+// Function to handle pin button click
+function pinButtonHandler(button) {
+    const taskId = button.dataset.taskId;
+
+    fetch(`/pin_task/${taskId}/`, {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Task id:", taskId);
+        if (data.status === 'success') {
+            console.log("Task changed.");
+            const buttonPinned = button.dataset.pinned === 'true';
+            refreshPinnedTaskList()
+            
+            // Update button text and attribute
+            button.textContent = buttonPinned ? 'Pin task' : 'Unpin task';
+            button.dataset.pinned = !buttonPinned;
+            
+        }
+
+    })
+    .catch(error => {
+        console.error('Error toggling pin:', error);
+    });
+}
+
+
+    // IMPORTANT: Refresh function not working, after 3 days i give up, can't find the solution to this, pin icon is appearing only after the 
+    // page is refreshed
+
+// Function to refresh pinned task list
+function refreshPinnedTaskList() {
+    console.log("Refreshing pinned task list...");
+    $.get("{% url 'tasks_list' %}", function(data) {
+        var taskListBody = $('#task-list tbody');
+        taskListBody.html($(data).find('tbody').html());
+
+        // Reattach event listeners for pin buttons
         const pinButtons = document.querySelectorAll('.pin-button');
         pinButtons.forEach(button => {
-            button.addEventListener('click', async () => {
-                const taskId = button.dataset.taskId;
-                try {
-                    const response = await fetch(`/pin_task/${taskId}/`, {
-                        method: 'POST',
-                        headers: {
-                            'X-CSRFToken': '{{ csrf_token }}'
-                        }
-                    });
-                    console.log("Selected task id", {taskId})
-                    const data = await response.json();
-                    if (data.success) {
-                        // Refresh the pinned task list after pinning
-                        refreshPinnedTaskList();
+            button.removeEventListener('click', pinButtonHandler);
+            button.addEventListener('click', () => pinButtonHandler(button));
+        });
+    });
+}
+
+
+
+// Attach event listeners for pin buttons
+document.addEventListener("DOMContentLoaded", function() {
+    const pinButtons = document.querySelectorAll('.pin-button');
+    pinButtons.forEach(button => {
+        button.addEventListener('click', () => pinButtonHandler(button));
+    });
+});
+</script>
+
+<script>
+        $(document).ready(function() {
+        $("#unpin-all-tasks").click(function() {
+            $.ajax({
+                type: "POST",
+                url: "{% url 'unpin_all_tasks' %}",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                success: function(response) {
+                    if (response.status === 'success') {
+                        refreshUnpinnedTaskList(),
+                        console.log("All tasks unpinned successfully.");
+                        // You can perform additional actions or refresh the task list here
+                    } else {
+                        console.error("Error unpinning tasks:", response.error_message);
                     }
-                    console.log("Task pinned.");
-                } catch (error) {
-                    console.error('Error toggling pin:', error);
+                },
+                error: function(xhr, textStatus, errorThrown) {
+                    console.error("Error unpinning tasks:", errorThrown);
                 }
             });
         });
     });
-
-    function refreshPinnedTaskList() {
+        function refreshUnpinnedTaskList() {
+        console.log("Before get method for refresh.")
         $.get("{% url 'tasks_list' %}", function(data) {
+            console.log("Inside the refresh function.")
             var taskListBody = $('#task-list tbody');
+            console.log("Variable for elements assigned.")
             taskListBody.html($(data).find('tbody').html());
+            console.log("After get method for refresh.")
         });
     }
 </script>

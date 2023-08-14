@@ -10,6 +10,7 @@ from django.urls import reverse_lazy
 from django.views import View
 from django.contrib.auth.decorators import login_required
 from .forms import RegisterUserForm, CreateTaskForm
+from django.utils import timezone
 
 
 
@@ -62,7 +63,10 @@ class CreateTaskView(CreateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        #just a list of all objects
         context['tasks'] = Task.objects.all()
+        #for stating if unpin all tasks button should appear or not
+        context['tasks_pinned'] = Task.objects.filter(pinned=True)
         return context
 
     def form_valid(self, form):
@@ -98,4 +102,22 @@ def PinTaskView(request, pk):
     
     except task.DoesNotExist:
         return JsonResponse({"message":"Non existent object."})
-    
+
+
+def UnpinAllTasksView(request):
+    if request.method == "POST":
+        try:
+            task = Task.objects.all().update(pinned=False)
+            return JsonResponse({'status':'success'})
+        except Exception as e:
+            return JsonResponse({'status':'error', 'error_message':str(e)})
+    else:
+        return JsonResponse({'status':'error', 'message':'Invalid request method.'})
+
+
+
+
+# @require_POST
+# @login_required 
+# def task_completion_view(request, pk):
+#     task = 
