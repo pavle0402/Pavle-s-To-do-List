@@ -18,6 +18,7 @@
     <br><br>
     <div class="container">
         <h1>Task List</h1>
+
         <div class="button-class">
         <button id="toggle-form-btn" class="add-task-button"><strong>+ </strong>Add Task</button>
         </div>
@@ -42,44 +43,83 @@
                     </tr>
                 </thead>
                 <tbody>
-                {% if tasks_pinned %}
-                    <button id="unpin-all-tasks" class="btn btn-danger">Unpin all tasks</button>
-                {%endif%}
-                    {% for task in tasks %}
-                    <tr>
-                        <td data-task-id="{{ task.pk }}" class="pinned-icon">
-                            {% if task.pinned %}
-                                <span><i class="fa-solid fa-thumbtack" ></i></span>
-                                <strong style="color: Red;">{{task.task}}</strong>
-                            {%else%}
-                                {{task.task}}
-                            {% endif %}
-                        </td>
-                        <td>{{ task.task_due|date:"H:i" }}</td>
-                        <td>{{ task.created_at }}</td>
-                        <td>
-                            <input type="checkbox" class="task-checkbox" data-task-pk="{{ task.pk }}" {% if task.complete %}checked{% endif %}>
-                        </td>
-                        <td>
-                            <div class="dropdown" id="dropdown-menu" onclick="toggleDropdown(this)">
-                                <i class="fas fa-ellipsis-v"></i>
-                                <div class="dropdown-content">
-                                    <a class="dropdown-item"><button class="delete-button" data-task-id="{{task.pk}}">Delete</button></a>
-                                    <button class="pin-button btn btn-primary" data-task-id="{{ task.pk }}" data-pinned="{{ task.pinned }}">
-                                        {% if task.pinned %}
-                                            Unpin task
-                                        {% else %}
-                                            Pin task
-                                        {% endif %}
-                                    </button>
-                                    
+                    {% if tasks_pinned %}
+                        <button id="unpin-all-tasks" class="btn btn-danger">Unpin all tasks</button>
+                    {%endif%}
+                        {% for task in tasks %}
+                        <tr>
+                            <td data-task-id="{{ task.pk }}" class="pinned-icon">
+                                {% if task.pinned %}
+                                    <span><i class="fa-solid fa-thumbtack" ></i></span>
+                                    <strong style="color: Red;">{{task.task}}</strong>
+                                {%else%}
+                                    {{task.task}}
+                                {% endif %}
+                            </td>
+                            <td>{{ task.task_due|date:"H:i" }}</td>
+                            <td>{{ task.created_at }}</td>
+                            <td>
+                                <form id="completion-form-{{ task.id }}" method="POST" action="{% url 'task_completion' task.pk %}">
+                                    {% csrf_token %}
+                                    <label>
+                                        <input type="checkbox" name="task_completion"
+                                        {% if task.complete and task.complete.task_completion %}
+                                        checkbox.checked
+                                        {% endif %}>
+                                        Task Completed
+                                    </label>
+                                    <button type="submit" style="display: none;"></button>
+                                </form>
+                                <script>
+                                    document.addEventListener("DOMContentLoaded", function() {
+                                        const form = document.getElementById("completion-form-{{ task.id }}");
+                                        const checkbox = form.querySelector("[name='task_completion']");
+                                        const initialTaskCompletion = form.querySelector("[name='task_completion'], [name='initial_task_completion']").value === '1';
+                                        
+                                        checkbox.addEventListener("change", function() {
+                                            const formData = new FormData(form);
+                                            fetch(form.action, {
+                                                method: 'POST',
+                                                body: formData
+                                            })
+                                            .then(response => response.json())
+                                            .then(data => {
+                                                if (data.status === 'success') {
+                                                    console.log("Task completion has been changed. - ", data.status);
+                                                    checkbox.checked = data.task_completion;
+                                                    console.log("Task completion status updated.");
+
+                                                }
+                                            })
+                                            .catch(error => {
+                                                console.error("Error updating task completion:", error);
+                                            });
+                                        });
+                                    });
+                                </script>
+                            </td>
+                            
+                            
+                            <td>
+                                <div class="dropdown" id="dropdown-menu" onclick="toggleDropdown(this)">
+                                    <i class="fas fa-ellipsis-v"></i>
+                                    <div class="dropdown-content">
+                                        <a class="dropdown-item"><button class="delete-button" data-task-id="{{task.pk}}">Delete</button></a>
+                                        <button class="pin-button btn btn-primary" data-task-id="{{ task.pk }}" data-pinned="{{ task.pinned }}">
+                                            {% if task.pinned %}
+                                                Unpin task
+                                            {% else %}
+                                                Pin task
+                                            {% endif %}
+                                        </button>
+                                        
+                                    </div>
                                 </div>
-                            </div>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
         </div>
 
         <div class="modal" id="deleteModal">
@@ -311,6 +351,7 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 </script>
 
+</script>
 </body>
 </html>
 

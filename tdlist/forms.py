@@ -45,3 +45,8 @@ class TaskCompletionForm(forms.ModelForm):
     class Meta:
         model = TaskCompletion
         fields = ('task_completion',)
+        
+
+        widgets = {
+            'task_completion': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }

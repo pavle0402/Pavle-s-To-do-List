@@ -13,5 +13,7 @@ urlpatterns = [
     path('tasks_list/<int:pk>/delete/', login_required(views.DeleteTaskView.as_view()), name='delete_task'),
     path('pin_task/<int:pk>/', views.PinTaskView, name="pin_task"),
     path('unpin_all_tasks/', views.UnpinAllTasksView, name="unpin_all_tasks"),
+    path('task_completion/<int:pk>/', views.task_completion_view, name="task_completion"),
+    path('tasks_list/sort/<str:sort_option>/', views.sort_tasks_view, name='sort_tasks'),
     # path('tasks_list/<int:pk>/task_completed/', views.TaskCompletionUpdateView.as_view(), name="task_completed")
 ]
