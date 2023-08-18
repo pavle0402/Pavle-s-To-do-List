@@ -4,13 +4,10 @@ from django.utils import timezone
 from django.core.exceptions import ValidationError
 
 class TaskOrderManager(models.Manager):
-
-    def pinned_first(self):
-        return self.get_queryset().order_by('-pinned', 'task')
+    def pinned_first_and_completed_last(self):
+        return self.get_queryset().order_by('-pinned', 'complete__task_completion')
     
-    def alphabetical(self):
-        return self.get_queryset().order_by('task')
-
+    
 class Task(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
     task = models.TextField(verbose_name="Task")
@@ -30,3 +27,13 @@ class TaskCompletion(models.Model):
 
     def __str__(self):
         return f"{self.task_name.task}"
+   
+
+class Contact(models.Model):
+    name = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    topic = models.CharField(max_length=55, blank=False)
+    email = models.EmailField(blank=False, null=True)
+    question = models.TextField(verbose_name="Question", blank=False)
+
+    def __str__(self):
+        return f"{self.name.first_name} - {self.topic}"

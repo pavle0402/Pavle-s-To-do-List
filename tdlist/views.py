@@ -9,7 +9,7 @@ from django.views.decorators.http import require_POST
 from django.urls import reverse_lazy
 from django.views import View
 from django.contrib.auth.decorators import login_required
-from .forms import RegisterUserForm, CreateTaskForm
+from .forms import RegisterUserForm, CreateTaskForm, ContactForm
 from django.utils import timezone
 
 
@@ -64,10 +64,10 @@ class CreateTaskView(CreateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         #just a list of all objects
-        context['tasks'] = Task.objects.all()
+        context['tasks'] = Task.objects.pinned_first_and_completed_last().filter(user=self.request.user)
         #for stating if unpin all tasks button should appear or not
         context['tasks_pinned'] = Task.objects.filter(pinned=True)
-        #stating whether task is completed or not.
+        #for authentication
         return context
 
     def form_valid(self, form):
@@ -75,8 +75,14 @@ class CreateTaskView(CreateView):
         self.object.user = self.request.user
         self.object.save()
         return JsonResponse({'status':'success', 'message':'Task created.'})
-    
 
+
+def task_author_view(request, pk):
+    task = get_object_or_404(Task, pk=pk)
+    context = {
+        'task_author': task.user
+    }
+    return render(request, 'tasks/task_list', context)
 
 class DeleteTaskView(DeleteView):
     model = Task
@@ -129,32 +135,27 @@ def task_completion_view(request, pk):
         task_completion, created = TaskCompletion.objects.get_or_create(task_name=task)
         task_completion.task_completion = not task_completion.task_completion
         task_completion.save()
+        #updating complete field in Task
+        task.complete = task_completion if task_completion.task_completion else None
+        task.save()
         messages.success(request, "Task completion status updated.")
         return JsonResponse({'status':'success', 'task_completion':task_completion.task_completion})
     
     return render(request, 'tasks/task_list.html', {})
 
 
-def get_completion_status(request):
-    incomplete_tasks = TaskCompletion.objects.filter(task_completion=False)
-    context = {
-        'incomplete_tasks': incomplete_tasks 
-    }
 
-    return render(request, 'tasks/task_list.html', context)
-
-
-#filter for ordering tasks
-
-def sort_tasks_view(request, sort_option):
+def contact_view(request):
+    form = ContactForm(request.POST or None)
+    if request.method == "POST":
+        if form.is_valid():
+            contact = form.save(commit=False)
+            contact.name = request.user
+            contact.save()
+            messages.success(request, f"{request.user.first_name}, you have successfully sent your message. Our team will be quick to answer.")
+            return redirect('tasks_list')
+        
+        else:
+            form = ContactForm()
     
-    if sort_option == 'A-Z':
-        tasks = Task.objects.order_by('task')
-
-    elif sort_option == 'Task created':
-        tasks = Task.objects.order_by('created_at')
-
-    elif sort_option == 'Pinned first':
-        tasks = Task.objects.order_by('-pinned')
-
-    return render(request, 'tasks/task_list.html', {'tasks':tasks})
+    return render(request, 'contact.html', {'form':form})

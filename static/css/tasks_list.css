@@ -197,3 +197,9 @@ tr:hover {
     background-color: rgb(212, 210, 207);
 
 }
+
+
+.completed {
+    text-decoration: line-through;
+}
+

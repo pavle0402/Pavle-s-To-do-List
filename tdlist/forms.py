@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Task, TaskCompletion
+from .models import Task, TaskCompletion, Contact
 from django.utils import timezone
 from django.core.exceptions import ValidationError
 from django.contrib import messages
@@ -50,3 +50,22 @@ class TaskCompletionForm(forms.ModelForm):
         widgets = {
             'task_completion': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+
+class ContactForm(forms.ModelForm):
+    class Meta:
+        model = Contact
+        fields = ('topic','email', 'question')
+
+        labels = {
+            'topic': 'Topic',
+            'question':'Question',
+            'email': 'E-mail',
+        }
+
+        widgets = {
+            'topic': forms.TextInput(attrs={'class':'form-class', 'placeholder':'Topic.'}),
+            'question': forms.Textarea(attrs={'class':'form-class', 'placeholder':'Type in your question.', 'cols':50, 'rows':10}),
+            'email': forms.EmailInput(attrs={'class':'form-class', 'placeholder':'Type in your email.'}),
+        }
+
+        

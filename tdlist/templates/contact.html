@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+
+{%block content%}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {%block title%}
+    <title>Contact Page</title>
+    {%endblock%}
+    <style>
+body {
+    margin: 0;
+    padding: 0;
+    background: url('your-background-image.jpg') no-repeat center center fixed;
+    background-size: cover;
+    font-family: Arial, sans-serif;
+}
+
+.contact-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5); /* Background with opacity */
+}
+
+.contact-form {
+    background-color: rgba(255, 255, 255, 0.8); /* See-through contact form */
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+    max-width: 500px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.contact-header {
+    text-align: center;
+    font-size: 30px;
+    font-weight: bolder;
+    margin-bottom: 20px;
+    text-decoration: underline 3px;
+
+}
+
+.form-label-tag{
+    font-weight: bolder;
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 20px;
+}
+
+.send-button {
+    margin-left: 180px;
+    margin-top: 20px;
+    background-color: rgb(59, 59, 199);
+    color: #fff;
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 10px 24px;
+}
+
+.send-button:hover {
+    background-color:rgb(119, 119, 237) ;
+}
+
+
+    </style>
+</head>
+<body>
+    <div class="contact-container">
+        <div class="contact-form">
+            <h1 class="contact-header">Contact Form</h1>
+            <form method="POST" id="form">
+                {%csrf_token%}
+                {% for field in form %}
+                <div class="form-label-tag">{{field.label_tag}}</div> {{field}}
+                {%endfor%}
+                <button class="send-button" type="submit">Send</button>
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>
+
+
+{%endblock%}

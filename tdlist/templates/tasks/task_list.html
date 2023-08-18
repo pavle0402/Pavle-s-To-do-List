@@ -47,7 +47,7 @@
                         <button id="unpin-all-tasks" class="btn btn-danger">Unpin all tasks</button>
                     {%endif%}
                         {% for task in tasks %}
-                        <tr>
+                        <tr class="{% if completed_tasks %}completed{%endif%}">
                             <td data-task-id="{{ task.pk }}" class="pinned-icon">
                                 {% if task.pinned %}
                                     <span><i class="fa-solid fa-thumbtack" ></i></span>
@@ -285,8 +285,6 @@ function pinButtonHandler(button) {
 }
 
 
-    // IMPORTANT: Refresh function not working, after 3 days i give up, can't find the solution to this, pin icon is appearing only after the 
-    // page is refreshed
 
 // Function to refresh pinned task list
 function refreshPinnedTaskList() {
